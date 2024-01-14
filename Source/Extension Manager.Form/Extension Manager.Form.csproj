@@ -4,10 +4,18 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <RootNamespace>Nulo</RootNamespace>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Version>2024.1.0</Version>
+    <Copyright>Copyright © 2024 Nulo Ecosystem</Copyright>
+    <Product>Extension Manager Forms ®</Product>
+    <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Icon.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Nulo.Modules.MultiLanguageManager" Version="1.0.2" />
@@ -16,6 +24,30 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Extension Manager\Extension Manager.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Core\Pages\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Modules\WorkspaceManager\DefaultWorkspaces.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DefaultWorkspaces.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Modules\WorkspaceManager\DefaultWorkspaces.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>DefaultWorkspaces.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="System.Diagnostics" />
+    <Using Include="System.Reflection" />
   </ItemGroup>
 
 </Project>
