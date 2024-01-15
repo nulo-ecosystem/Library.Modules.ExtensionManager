@@ -168,9 +168,6 @@
   <data name="Pages_SplashScreen_PluginManager_LoadPluginMenuItem" xml:space="preserve">
     <value>Loading plugin:</value>
   </data>
-  <data name="Pages_SplashScreen_PluginManager_Settings" xml:space="preserve">
-    <value>Configuring settings...</value>
-  </data>
   <data name="Pages_SplashScreen_WorkspaceManager" xml:space="preserve">
     <value>Starting workspaces...</value>
   </data>

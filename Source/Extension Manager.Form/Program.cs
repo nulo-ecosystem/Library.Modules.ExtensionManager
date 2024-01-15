@@ -2,11 +2,12 @@ using Nulo.Modules.MultiLanguageManager;
 using Nulo.Modules.ExtensionManager;
 using Nulo.Modules.WorkspaceManager;
 using Nulo.Core.Pages;
+using Nulo.Core.Menus;
 
 namespace Nulo {
 
     internal static class Program {
-        public static ExtensionManager<ExtensionData> ExtensionManager;
+        public static ExtensionManager<ExtensionData, Miscellaneous> ExtensionManager;
         public static MultiLanguageManager<LanguageData> MultiLanguageManager;
         public static WorkspaceManager<WorkspaceTheme, WorkspaceData> WorkspaceManager;
 
@@ -20,7 +21,7 @@ namespace Nulo {
             var splash = new SplashScreen();
             splash.Show();
             Application.DoEvents();
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
 
             #region Multi-Language Manager
 
@@ -29,7 +30,7 @@ namespace Nulo {
             // Settings
             MultiLanguageManager = new MultiLanguageManager<LanguageData>("Nulo.Modules.MultiLanguageManager.Language");
             // Await
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
 
             #endregion Multi-Language Manager
 
@@ -38,26 +39,21 @@ namespace Nulo {
             // Notify
             splash.SetStatusLabel(MultiLanguageManager.GetText("Pages_SplashScreen_PluginManager_LoadLocalMenuItem"));
             // Settings
-            ExtensionManager = new ExtensionManager<ExtensionData>();
+            ExtensionManager = new ExtensionManager<ExtensionData, Miscellaneous>();
             ExtensionManager.LoadLocalMenuItem();
             // Await
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
 
-            foreach(var pluginItem in ExtensionManager.PluginFileCount()) {
+            foreach(var pluginItem in ExtensionManager.LoadPluginItems()) {
                 // Notify
-                splash.SetStatusLabel($"{MultiLanguageManager.GetText("Pages_SplashScreen_PluginManager_LoadPluginMenuItem")} {pluginItem.Title}...");
+                splash.SetStatusLabel($"{MultiLanguageManager.GetText("Pages_SplashScreen_PluginManager_LoadPluginMenuItem")} {pluginItem.ProductName}...");
                 // Settings
                 ExtensionManager.LoadPluginMenuItem(pluginItem);
                 // Await
-                Thread.Sleep(500);
+                Thread.Sleep(2000);
             }
 
-            // Notify
-            splash.SetStatusLabel(MultiLanguageManager.GetText("Pages_SplashScreen_PluginManager_Settings"));
-            // Settings
-            ExtensionManager.SetMenuItem();
-            // Await
-            Thread.Sleep(500);
+            ExtensionManager.Render();
 
             #endregion Extension Manager
 
@@ -68,12 +64,12 @@ namespace Nulo {
             // Settings
             WorkspaceManager = new WorkspaceManager<WorkspaceTheme, WorkspaceData>();
             // Await
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
 
             #endregion Workspace Manager
 
             splash.SetStatusLabel(string.Empty);
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
             splash.Dispose();
 
             #endregion Loading Modules

@@ -4,8 +4,6 @@
 
         IEnumerable<Type> GetLocalMenuItems();
 
-        List<PluginItem> GetPluginItems();
-
-        IEnumerable<Type> GetPluginsMenuItems(PluginItem pluginItem);
+        IEnumerable<PluginItem> GetPluginMenuItems();
     }
 }

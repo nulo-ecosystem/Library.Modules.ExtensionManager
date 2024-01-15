@@ -1,9 +1,8 @@
-﻿using Nulo.Modules.ExtensionManager;
-using Nulo.Modules.WorkspaceManager.Docking;
+﻿using Nulo.Modules.WorkspaceManager.Docking;
 
 namespace Nulo.Core.Pages {
 
-    public partial class MainPage : Form {
+    internal partial class MainPage : Form {
 
         #region MainPage
 

@@ -9,4 +9,8 @@
     <AssemblyName>lib.exm</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Using Include="System.Reflection" />
+  </ItemGroup>
+
 </Project>

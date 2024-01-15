@@ -6,7 +6,7 @@
             return Assembly.GetAssembly(typeof(ExtensionData)).GetTypes();
         }
 
-        public List<PluginItem> GetPluginItems() {
+        public IEnumerable<PluginItem> GetPluginMenuItems() {
             var folder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\plugins";
             if(!Directory.Exists(folder)) {
                 Directory.CreateDirectory(folder);
@@ -14,15 +14,11 @@
 
             List<PluginItem> pluginItems = [];
             foreach(var path in Directory.GetFiles(folder, "*.dll")) {
-                //Assembly pluginAssembly = Assembly.LoadFile(path);
-                pluginItems.Add(new PluginItem { Title = path });
+                var assembly = Assembly.LoadFile(path);
+                var infor = FileVersionInfo.GetVersionInfo(assembly.Location);
+                pluginItems.Add(new PluginItem(infor.ProductName, assembly));
             }
-
             return pluginItems;
-        }
-
-        public IEnumerable<Type> GetPluginsMenuItems(PluginItem pluginItem) {
-            return [];
         }
     }
 }

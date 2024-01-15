@@ -1,7 +1,7 @@
 ﻿namespace Nulo.Modules.ExtensionManager {
 
-    public class PluginItem {
-
-        public string Title { get; set; }
+    public sealed class PluginItem(string productName, Assembly assembly) {
+        public string ProductName { get; private set; } = productName.Replace(" ®", "®");
+        public Assembly Assembly { get; private set; } = assembly;
     }
 }
