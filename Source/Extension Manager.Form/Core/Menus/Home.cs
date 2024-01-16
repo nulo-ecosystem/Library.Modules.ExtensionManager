@@ -6,6 +6,10 @@ namespace Nulo.Core.Menus {
     internal sealed class Home : MenuItem {
     }
 
+    [Route("home/profile"), Group(50)]
+    internal sealed class HomeProfile : MenuItem {
+    }
+
     [Route("home/exit"), Group(100)]
     internal sealed class HomeExit : MenuItem {
     }

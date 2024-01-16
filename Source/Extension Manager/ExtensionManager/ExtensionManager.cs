@@ -1,9 +1,8 @@
 ﻿namespace Nulo.Modules.ExtensionManager {
 
-    public class ExtensionManager<ExtensionData, DefaultMenuItem> where ExtensionData : IExtensionData where DefaultMenuItem : MenuItem {
+    public sealed class ExtensionManager<ExtensionData, DefaultMenuItem> where ExtensionData : IExtensionData where DefaultMenuItem : MenuItem {
         private readonly IExtensionData extensionData;
 
-        private List<DataMenuItem> dataMenuItems;
         private string defaultRoute;
 
         public ExtensionManager() {
@@ -13,106 +12,182 @@
         #region Public Methods
 
         public void LoadLocalMenuItem() {
-            dataMenuItems = [];
-
             var menuItem = GetDataMenuItem(typeof(DefaultMenuItem));
             defaultRoute = menuItem.Route;
-            InsertMenuItem(dataMenuItems, menuItem);
+            InsertMenuItem(menuItem);
 
             LoadMenuItem(extensionData.GetLocalMenuItems());
         }
 
-        public IEnumerable<PluginItem> LoadPluginItems() => extensionData.GetPluginMenuItems();
+        public IEnumerable<PluginItem> LoadPluginItems() {
+            return extensionData.GetPluginMenuItems();
+        }
 
-        public void LoadPluginMenuItem(PluginItem pluginItem) => LoadMenuItem(pluginItem.Assembly.GetTypes());
+        public void LoadPluginMenuItem(PluginItem pluginItem) {
+            LoadMenuItem(pluginItem.Assembly.GetTypes());
+        }
 
         #endregion Public Methods
 
         #region Private Methods
 
+        private InstanceMenuItem GetDataMenuItem(Type type) {
+            byte group = 0, location = 0;
+            string route = null;
+            var menuItem = (MenuItem)Activator.CreateInstance(type);
+
+            if(type.CustomAttributes.Any()) {
+                if(type.GetCustomAttributes(typeof(Group), true) is object[] groups && groups.Length != 0) {
+                    group = ((Group)groups[0]).Value;
+                }
+                if(type.GetCustomAttributes(typeof(Location), true) is object[] locations && locations.Length != 0) {
+                    location = ((Location)locations[0]).Value;
+                }
+                if(type.GetCustomAttributes(typeof(Route), true) is object[] routes && routes.Length != 0) {
+                    route = $"{((Route)routes[0]).Value}";
+                }
+            }
+            route ??= $"{defaultRoute}/{type.FullName.ToLower()}";
+
+            return new InstanceMenuItem { Group = group, Location = location, Route = route, MenuItem = menuItem };
+        }
+
         private void LoadMenuItem(IEnumerable<Type> types) {
             foreach(var type in types) {
                 if(type.IsClass && !type.IsAbstract && type.IsSealed && type.IsSubclassOf(typeof(MenuItem))) {
-                    InsertMenuItem(dataMenuItems, GetDataMenuItem(type));
+                    InsertMenuItem(GetDataMenuItem(type));
                 }
             }
         }
 
-        private DataMenuItem GetDataMenuItem(Type type) {
-            var menuItem = (MenuItem)Activator.CreateInstance(type);
-            string route = null;
-            byte group = 0;
-
-            if(type.CustomAttributes.Any()) {
-                if(type.GetCustomAttributes(typeof(Route), true) is object[] routes && routes.Length != 0) {
-                    route = $"{((Route)routes[0]).Value}";
-                }
-                if(type.GetCustomAttributes(typeof(Group), true) is object[] groups && groups.Length != 0) {
-                    group = ((Group)groups[0]).Value;
-                }
-            }
-
-            route ??= $"{defaultRoute}/{type.FullName.ToLower()}";
-
-            return new DataMenuItem { Route = route, Group = group, MenuItem = menuItem };
+        private void InsertMenuItem(InstanceMenuItem item) {
+            //dataMenuItems.Add(item.Group, item.Route);
         }
 
         #endregion Private Methods
 
-        #region Private Static Methods
-
-        private static void InsertMenuItem(List<DataMenuItem> dataMenuItems, DataMenuItem newData) {
-            var route = newData.Route.Split("/");
-            if(dataMenuItems.FirstOrDefault(a => a.Route.Equals(route[0])) is DataMenuItem dataMenuItem && route.Length > 1) {
-                newData.Route = newData.Route.Replace($"{route[0]}/", "");
-
-                //SubMenuItem subMenuItem = null;
-                if(newData.SubMenuItems.FirstOrDefault(a => a.Group == newData.Group) is SubMenuItem subMenuItem) {
-                    subMenuItem.Items
-                } else {
-
-                }
-
-                //InsertMenuItem(dataMenuItems..Items, newData);
-            } else if(route.Length == 1) {
-                dataMenuItems.Add(newData);
-            }
-            //if(currentData.Route.Equals(route[0])) {
-            //    DataMenuItem dataMenuItem = null;
-            //    foreach(var subMenuItem in currentData.SubMenuItems) {
-            //        if(subMenuItem.Items.Route.Equals(route[0])) {
-            //            dataMenuItem = subMenuItem.Items;
-            //            break;
-            //        }
-            //    }
-            //    if(dataMenuItem is null) {
-            //        currentData.SubMenuItems.Add(new SubMenuItem { Group = newData.Group, Items = newData });
-            //        InsertMenuItem(currentData.SubMenuItems[0].Items, newData);
-            //    }
-            //}
-
-            //if(currentData.FirstOrDefault(a => a.Route.Equals(route[0])) is DataMenuItem dataMenuItem && route.Length > 1) {
-            //    newData.Route = newData.Route.Replace($"{route[0]}/", "");
-            //
-            //    var subMenuItem = dataMenuItem.SubMenuItems.FirstOrDefault(a => a.Group.Equals(newData.Group));
-            //    if(subMenuItem is null) {
-            //        subMenuItem = new SubMenuItem { Group = newData.Group };
-            //        dataMenuItem.SubMenuItems.Add(subMenuItem);// ---
-            //    }
-            //
-            //    InsertMenuItem(subMenuItem.Items, newData);
-            //} else if(route.Length == 1) {
-            //    currentData.Add(newData);// ---
-            //}
-        }
-
-        #endregion Private Static Methods
-
         public void Render() {
-            // ...
-            defaultRoute = null;
-            dataMenuItems = null;
         }
+
+        /*
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+        .
+         */
+        ////private List<DataMenuItem> dataMenuItems;
+        ////
+
+        //#region Public Methods
+
+        ////public void LoadLocalMenuItem() {
+        ////    dataMenuItems = [];
+
+        ////    var menuItem = GetDataMenuItem(typeof(DefaultMenuItem));
+        ////    defaultRoute = menuItem.Route;
+        ////    InsertMenuItem(dataMenuItems, menuItem);
+
+        ////    LoadMenuItem(extensionData.GetLocalMenuItems());
+        ////}
+
+        //#endregion Public Methods
+
+        //#region Private Methods
+        //#endregion Private Methods
+
+        //#region Private Static Methods
+
+        //private static void InsertMenuItem(List<DataMenuItem> items, DataMenuItem item) {
+        //    var routes = item.Route.Split("/");
+        //    if(items.FirstOrDefault(a => a.Route.Equals(routes[0])) is DataMenuItem dataMenuItem && routes.Length > 1) {
+        //        item.Route = item.Route.Replace($"{routes[0]}/", "");
+
+        //        var subMenuItem = dataMenuItem.SubMenuItems.FirstOrDefault(a => a.Group == item.Group);
+        //        if(subMenuItem is null) {
+        //            subMenuItem = new SubMenuItem { Group = item.Group };
+
+        //            int index = 0;
+        //            for(int i = 0; i < dataMenuItem.SubMenuItems.Count; i++) {
+        //                if(subMenuItem.Group < dataMenuItem.SubMenuItems[i].Group) { break; }
+        //                index = i + 1;
+        //            }
+
+        //            dataMenuItem.SubMenuItems.Insert(index, subMenuItem);
+        //        }
+
+        //        InsertMenuItem(subMenuItem.Items, item);
+        //    } else if(routes.Length == 1) {
+        //        int index = 0;
+        //        for(int i = 0; i < items.Count; i++) {
+        //            if(item.Group < items[i].Group) { break; }
+        //            index = i + 1;
+        //        }
+
+        //        items.Insert(index, item);
+        //    }
+        //}
+
+        //#endregion Private Static Methods
+
+        //public void Render() {
+        //    // ...
+        //    defaultRoute = null;
+        //    dataMenuItems = null;
+        //}
     }
 }
 
