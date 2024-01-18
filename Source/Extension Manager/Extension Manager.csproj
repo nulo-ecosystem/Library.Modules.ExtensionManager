@@ -7,7 +7,48 @@
     <Nullable>disable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>lib.exm</AssemblyName>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>Nulo.Modules.ExtensionManager</PackageId>
+    <Title>Extension Manager</Title>
+    <Version>1.0.0-alpha</Version>
+    <Authors>kastney</Authors>
+    <Company>Nulo Ecosystem</Company>
+    <Product>Extension Manager ®</Product>
+    <Description>A library for managing plugins for Nulo Ecosystem desktop solutions.</Description>
+    <Copyright>Copyright © 2024 Nulo Ecosystem</Copyright>
+    <PackageProjectUrl>https://github.com/nulo-ecosystem/Library.Modules.ExtensionManager/pkgs/nuget/Nulo.Modules.ExtensionManager</PackageProjectUrl>
+    <PackageIcon>Icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/nulo-ecosystem/Library.Modules.ExtensionManager</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>library; plugin; nulo-ecosystem</PackageTags>
+    <PackageReleaseNotes>1. Breaking changes
+...
+
+2. New features
+...
+
+3. Bug fixes
+...</PackageReleaseNotes>
+    <NeutralLanguage>en</NeutralLanguage>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\Resources\Icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <Using Include="System.Collections" />
