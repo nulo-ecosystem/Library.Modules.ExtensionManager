@@ -46,14 +46,12 @@ namespace Nulo {
 
             foreach(var pluginItem in ExtensionManager.LoadPluginItems()) {
                 // Notify
-                splash.SetStatusLabel($"{MultiLanguageManager.GetText("Pages_SplashScreen_PluginManager_LoadPluginMenuItem")} {pluginItem.ProductName}...");
+                splash.SetStatusLabel($"{MultiLanguageManager.GetText("Pages_SplashScreen_PluginManager_LoadPluginMenuItem")}: {pluginItem.ProductName}");
                 // Settings
                 ExtensionManager.LoadPluginMenuItem(pluginItem);
                 // Await
                 Thread.Sleep(2000);
             }
-
-            ExtensionManager.Render();
 
             #endregion Extension Manager
 
@@ -69,12 +67,13 @@ namespace Nulo {
             #endregion Workspace Manager
 
             splash.SetStatusLabel(string.Empty);
+            var mainPage = new MainPage(ExtensionManager.Render());
             Thread.Sleep(2000);
             splash.Dispose();
 
             #endregion Loading Modules
 
-            Application.Run(new MainPage());
+            Application.Run(mainPage);
         }
     }
 }

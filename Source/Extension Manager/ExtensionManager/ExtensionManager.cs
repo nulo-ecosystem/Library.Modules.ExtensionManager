@@ -3,6 +3,8 @@
     public sealed class ExtensionManager<ExtensionData, DefaultMenuItem> where ExtensionData : IExtensionData where DefaultMenuItem : MenuItem {
         private readonly IExtensionData extensionData;
 
+        private ToolStripItem[] menuItems;
+        private MenuItemCollection collection;
         private string defaultRoute;
 
         public ExtensionManager() {
@@ -12,9 +14,11 @@
         #region Public Methods
 
         public void LoadLocalMenuItem() {
+            collection = new(null);
+
             var menuItem = GetDataMenuItem(typeof(DefaultMenuItem));
             defaultRoute = menuItem.Route;
-            InsertMenuItem(menuItem);
+            InsertMenuItem(collection, menuItem);
 
             LoadMenuItem(extensionData.GetLocalMenuItems());
         }
@@ -27,11 +31,30 @@
             LoadMenuItem(pluginItem.Assembly.GetTypes());
         }
 
+        public ToolStripItem[] Render() {
+            var items = Render(collection);
+            if(ItemExists(items, defaultRoute) is ToolStripMenuItem toolStripMenu && toolStripMenu.DropDownItems.Count == 0) { items.Remove(toolStripMenu); }
+            menuItems = [.. items];
+
+            defaultRoute = null;
+            collection = null;
+
+            return menuItems;
+        }
+
+        public void TextsUpdate() {
+            TextsUpdate(menuItems);
+        }
+
+        public ToolStripMenuItem GetMenuItem(string route) {
+            return GetMenuItem(menuItems, route);
+        }
+
         #endregion Public Methods
 
         #region Private Methods
 
-        private InstanceMenuItem GetDataMenuItem(Type type) {
+        private MenuItemFull GetDataMenuItem(Type type) {
             byte group = 0, location = 0;
             string route = null;
             var menuItem = (MenuItem)Activator.CreateInstance(type);
@@ -49,243 +72,103 @@
             }
             route ??= $"{defaultRoute}/{type.FullName.ToLower()}";
 
-            return new InstanceMenuItem { Group = group, Location = location, Route = route, MenuItem = menuItem };
+            return new MenuItemFull(route, group, location, menuItem);
         }
 
         private void LoadMenuItem(IEnumerable<Type> types) {
             foreach(var type in types) {
                 if(type.IsClass && !type.IsAbstract && type.IsSealed && type.IsSubclassOf(typeof(MenuItem))) {
-                    InsertMenuItem(GetDataMenuItem(type));
+                    InsertMenuItem(collection, GetDataMenuItem(type));
                 }
             }
         }
 
-        private void InsertMenuItem(InstanceMenuItem item) {
-            //dataMenuItems.Add(item.Group, item.Route);
-        }
-
         #endregion Private Methods
 
-        public void Render() {
+        #region Static Private Methods
+
+        private static List<ToolStripItem> Render(MenuItemCollection items) {
+            var toolStripItem = new List<ToolStripItem>();
+
+            while(items.Groups.Next() is BinaryHeap<MenuItemCollection> group) {
+                while(group.Next() is MenuItemCollection item) {
+                    var menuItem = new ToolStripMenuItem();
+
+                    if(item.MenuItem is not null) {
+                        var type = item.MenuItem.GetType();
+                        if(type.GetMethod("OnClick") is MethodInfo method && !method.DeclaringType.Equals(typeof(MenuItem))) {
+                            menuItem.Click += item.MenuItem.OnClick;
+                        }
+                        if(type.GetProperty("Text") is not PropertyInfo property || property.DeclaringType.Equals(typeof(MenuItem))) {
+                            menuItem.Text = item.Route;
+                        }
+                        menuItem.Image = item.MenuItem.Icon;
+                        menuItem.Tag = new Tuple<string, MenuItem>(item.Route, item.MenuItem);
+                    } else {
+                        menuItem.Text = item.Route;
+                        menuItem.Tag = new Tuple<string, MenuItem>(item.Route, null);
+                    }
+
+                    menuItem.DropDownItems.AddRange(Render(item).ToArray());
+                    toolStripItem.Add(menuItem);
+                }
+                if(items.Groups.GetList().Count != 0) {
+                    toolStripItem.Add(new ToolStripSeparator());
+                }
+            }
+
+            return toolStripItem;
         }
 
-        /*
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-        .
-         */
-        ////private List<DataMenuItem> dataMenuItems;
-        ////
+        private static void InsertMenuItem(MenuItemCollection items, MenuItemFull item) {
+            var routes = item.Route.Split("/");
 
-        //#region Public Methods
+            var group = items.FindByRoute(routes[0]);
+            group ??= items.Add(routes[0], item.Group, item.Location);
 
-        ////public void LoadLocalMenuItem() {
-        ////    dataMenuItems = [];
+            if(routes.Length > 1) {
+                item.Route = item.Route.Replace($"{routes[0]}/", "");
+                InsertMenuItem(group, item);
+            } else {
+                group.MenuItem = item.MenuItem;
+            }
+        }
 
-        ////    var menuItem = GetDataMenuItem(typeof(DefaultMenuItem));
-        ////    defaultRoute = menuItem.Route;
-        ////    InsertMenuItem(dataMenuItems, menuItem);
+        private static void TextsUpdate(IEnumerable items) {
+            foreach(var item in items) {
+                if(item is ToolStripMenuItem toolStripMenuItem) {
+                    if(toolStripMenuItem.Tag is Tuple<string, MenuItem> menuItem && menuItem.Item2 is not null && menuItem.Item2.GetType().GetProperty("Text") is PropertyInfo property && !property.DeclaringType.Equals(typeof(MenuItem))) {
+                        toolStripMenuItem.Text = menuItem.Item2.Text;
+                    }
+                    TextsUpdate(toolStripMenuItem.DropDownItems);
+                }
+            }
+        }
 
-        ////    LoadMenuItem(extensionData.GetLocalMenuItems());
-        ////}
+        private static ToolStripMenuItem GetMenuItem(IEnumerable items, string route) {
+            if(!string.IsNullOrEmpty(route)) {
+                var routes = route.Split("/");
+                if(ItemExists(items, routes[0]) is ToolStripMenuItem toolStripMenuItem) {
+                    if(routes.Length == 1) {
+                        return toolStripMenuItem;
+                    } else {
+                        route = route.Replace($"{routes[0]}/", "");
+                        return GetMenuItem(toolStripMenuItem.DropDownItems, route);
+                    }
+                }
+            }
+            return null;
+        }
 
-        //#endregion Public Methods
+        private static ToolStripMenuItem ItemExists(IEnumerable items, string code) {
+            foreach(var item in items) {
+                if(item is ToolStripMenuItem toolStripMenuItem && toolStripMenuItem.Tag is Tuple<string, MenuItem> menuItem && menuItem.Item1.Equals(code)) {
+                    return toolStripMenuItem;
+                }
+            }
+            return null;
+        }
 
-        //#region Private Methods
-        //#endregion Private Methods
-
-        //#region Private Static Methods
-
-        //private static void InsertMenuItem(List<DataMenuItem> items, DataMenuItem item) {
-        //    var routes = item.Route.Split("/");
-        //    if(items.FirstOrDefault(a => a.Route.Equals(routes[0])) is DataMenuItem dataMenuItem && routes.Length > 1) {
-        //        item.Route = item.Route.Replace($"{routes[0]}/", "");
-
-        //        var subMenuItem = dataMenuItem.SubMenuItems.FirstOrDefault(a => a.Group == item.Group);
-        //        if(subMenuItem is null) {
-        //            subMenuItem = new SubMenuItem { Group = item.Group };
-
-        //            int index = 0;
-        //            for(int i = 0; i < dataMenuItem.SubMenuItems.Count; i++) {
-        //                if(subMenuItem.Group < dataMenuItem.SubMenuItems[i].Group) { break; }
-        //                index = i + 1;
-        //            }
-
-        //            dataMenuItem.SubMenuItems.Insert(index, subMenuItem);
-        //        }
-
-        //        InsertMenuItem(subMenuItem.Items, item);
-        //    } else if(routes.Length == 1) {
-        //        int index = 0;
-        //        for(int i = 0; i < items.Count; i++) {
-        //            if(item.Group < items[i].Group) { break; }
-        //            index = i + 1;
-        //        }
-
-        //        items.Insert(index, item);
-        //    }
-        //}
-
-        //#endregion Private Static Methods
-
-        //public void Render() {
-        //    // ...
-        //    defaultRoute = null;
-        //    dataMenuItems = null;
-        //}
+        #endregion Static Private Methods
     }
 }
-
-//private static void SetMenuItem(ToolStripItemCollection items, MenuItem menuItem) {
-//    if(!string.IsNullOrEmpty(menuItem.Route)) {
-//        var route = menuItem.Route.Split("/");
-//        if(ItemExists(items, route[0]) is ToolStripMenuItem toolStripMenuItem) {
-//            if(route.Length > 1) {
-//                menuItem.Route = menuItem.Route.Replace($"{route[0]}/", "");
-//                SetMenuItem(toolStripMenuItem.DropDownItems, menuItem);
-//            }
-//        } else if(route.Length == 1) {
-//            var item = new ToolStripMenuItem {
-//                Image = menuItem.Instance.Icon,
-//                Text = menuItem.Instance.Text,
-//                Tag = menuItem
-//            };
-//            if(menuItem.IsOnClick) { item.Click += menuItem.Instance.OnClick; }
-//            Insert(items, item);
-//        }
-//    }
-//}
-
-//private static ToolStripMenuItem GetMenuItem(ToolStripItemCollection items, string route) {
-//    if(!string.IsNullOrEmpty(route)) {
-//        var routes = route.Split("/");
-//        if(ItemExists(items, routes[0]) is ToolStripMenuItem toolStripMenuItem) {
-//            if(routes.Length == 1) {
-//                return toolStripMenuItem;
-//            } else {
-//                route = route.Replace($"{routes[0]}/", "");
-//                return GetMenuItem(toolStripMenuItem.DropDownItems, route);
-//            }
-//        }
-//    }
-//    return null;
-//}
-
-//private static ToolStripMenuItem ItemExists(ToolStripItemCollection items, string code) {
-//    for(int i = 0; i < items.Count; i++) {
-//        if(items[i].Tag is not null && items[i].Tag is MenuItem menuItem) {
-//            if(menuItem.Route.Equals(code)) {
-//                return items[i] as ToolStripMenuItem;
-//            }
-//        }
-//    }
-//    return null;
-//}
-
-//private static void TextsUpdate(ToolStripItemCollection items) {
-//    foreach(ToolStripMenuItem item in items) {
-//        if(item.Tag is MenuItem menuItem) { item.Text = menuItem.Instance.Text; }
-//        TextsUpdate(item.DropDownItems);
-//    }
-//}
-
-//private static void Insert(ToolStripItemCollection items, ToolStripMenuItem item) {
-//    var dataMenuItem = dataMenuItems.FirstOrDefault(a => a.Items.Equals(items));
-//    if(dataMenuItem is null) {
-//        dataMenuItem = new DataMenuItem { Items = items };
-//        dataMenuItems.Add(dataMenuItem);
-//    }
-
-//    var menuItem = (MenuItem)item.Tag;
-//    if(dataMenuItem.SubMenuItems.FirstOrDefault(a => a.SubPosition == menuItem.SubPosition) is not SubMenuItem subMenuItem) {
-//        subMenuItem = new SubMenuItem { SubPosition = menuItem.SubPosition };
-//        if(dataMenuItem.SubMenuItems.Count == 0) {
-//            dataMenuItem.SubMenuItems.Add(subMenuItem);
-//        } else {
-//            for(int i = 0; i < dataMenuItem.SubMenuItems.Count; i++) {
-//                if(subMenuItem.SubPosition < dataMenuItem.SubMenuItems[i].SubPosition) {
-//                    dataMenuItem.SubMenuItems.Insert(i, subMenuItem);
-//                    break;
-//                } else if(i + 1 >= dataMenuItem.SubMenuItems.Count) {
-//                    dataMenuItem.SubMenuItems.Add(subMenuItem);
-//                    break;
-//                }
-//            }
-//        }
-//    }
-
-//    subMenuItem.Count++;
-//    items.Add(item);
-//    //int low, subLow, high, subHigh, subMid = 0;
-//    ////, mid = 0;
-
-//    //while(low <= high) {
-//    //    mid = (low + high) / 2;
-//    //    try {
-//    //        if(((MenuItem)items[mid].Tag).Position < ((MenuItem)item.Tag).Position) {
-//    //            low = mid + 1;
-//    //        } else {
-//    //            high = mid - 1;
-//    //        }
-//    //    } catch {
-//    //        break;
-//    //    }
-//    //}
-//}
-
-//#endregion Menu Item

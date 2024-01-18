@@ -6,12 +6,14 @@ namespace Nulo.Core.Pages {
 
         #region MainPage
 
-        public MainPage() {
+        public MainPage(ToolStripItem[] menuItems) {
             InitializeComponent();
+            MenuStrip.Items.AddRange(menuItems);
+
             DockPanel.Controls.Add(Program.WorkspaceManager.DockPanel);
             Program.WorkspaceManager.Style = WorkspaceManager_Style;
             Program.WorkspaceManager.SetToolStripWorkspaces(ToolStripWorkspaces);
-            //Program.WorkspaceManager.SetMenuStripWorkspaces(Program.ExtensionManager.GetMenuItem("window"), Program.ExtensionManager.GetMenuItem("window/workspaces"));
+            Program.WorkspaceManager.SetMenuStripWorkspaces(Program.ExtensionManager.GetMenuItem("window"), Program.ExtensionManager.GetMenuItem("window/workspaces"));
             Program.WorkspaceManager.Init();
 
             Program.MultiLanguageManager.SwitchLanguage += MultiLanguageManager_SwitchLanguage;
@@ -39,7 +41,7 @@ namespace Nulo.Core.Pages {
         #region MultiLanguageManager
 
         private void MultiLanguageManager_SwitchLanguage() {
-            //Program.ExtensionManager.TextsUpdate();
+            Program.ExtensionManager.TextsUpdate();
             Program.WorkspaceManager.TextsUpdate();
         }
 
