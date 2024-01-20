@@ -10,7 +10,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>Nulo.Modules.ExtensionManager</PackageId>
     <Title>Extension Manager</Title>
-    <Version>1.0.0-alpha</Version>
+    <Version>1.0.1-alpha</Version>
     <Authors>kastney</Authors>
     <Company>Nulo Ecosystem</Company>
     <Product>Extension Manager ®</Product>
