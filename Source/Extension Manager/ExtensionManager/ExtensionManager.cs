@@ -58,6 +58,7 @@
             byte group = 0, location = 0;
             string route = null;
             var menuItem = (MenuItem)Activator.CreateInstance(type);
+            Keys keys = Keys.None;
 
             if(type.CustomAttributes.Any()) {
                 if(type.GetCustomAttributes(typeof(Group), true) is object[] groups && groups.Length != 0) {
@@ -69,10 +70,13 @@
                 if(type.GetCustomAttributes(typeof(Route), true) is object[] routes && routes.Length != 0) {
                     route = $"{((Route)routes[0]).Value}";
                 }
+                if(type.GetCustomAttributes(typeof(ShortcutKeys), true) is object[] shortcutKeys && shortcutKeys.Length != 0) {
+                    keys = ((ShortcutKeys)shortcutKeys[0]).Value;
+                }
             }
             route ??= $"{defaultRoute}/{type.FullName.ToLower()}";
 
-            return new MenuItemFull(route, group, location, menuItem);
+            return new MenuItemFull(route, group, location, keys, menuItem);
         }
 
         private void LoadMenuItem(IEnumerable<Type> types) {
@@ -103,6 +107,7 @@
                             menuItem.Text = item.Route;
                         }
                         menuItem.Image = item.MenuItem.Icon;
+                        try { menuItem.ShortcutKeys = item.ShortcutKeys; } catch { }
                         menuItem.Tag = new Tuple<string, MenuItem>(item.Route, item.MenuItem);
                     } else {
                         menuItem.Text = item.Route;
@@ -124,7 +129,7 @@
             var routes = item.Route.Split("/");
 
             var group = items.FindByRoute(routes[0]);
-            group ??= items.Add(routes[0], item.Group, item.Location);
+            group ??= items.Add(routes[0], item.Group, item.Location, item.ShortcutKeys);
 
             if(routes.Length > 1) {
                 item.Route = item.Route.Replace($"{routes[0]}/", "");

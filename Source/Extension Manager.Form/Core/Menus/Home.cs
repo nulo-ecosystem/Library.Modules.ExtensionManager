@@ -14,7 +14,7 @@ namespace Nulo.Core.Menus {
     internal sealed class HomeExit : MenuItem {
     }
 
-    [Route("home/settings"), Group(50)]
+    [Route("home/settings"), Group(50), ShortcutKeys(Keys.Control | Keys.W)]
     internal sealed class HomeSettings : MenuItem {
     }
 }

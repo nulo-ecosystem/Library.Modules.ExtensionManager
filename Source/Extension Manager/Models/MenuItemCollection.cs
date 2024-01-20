@@ -5,6 +5,8 @@
         #region Properties
 
         public string Route { get; private set; } = route;
+        public Keys ShortcutKeys { get; set; }
+
         public MenuItem MenuItem { get; set; }
         public BinaryHeap<BinaryHeap<MenuItemCollection>> Groups { get; private set; } = new();
 
@@ -21,8 +23,8 @@
             return null;
         }
 
-        public MenuItemCollection Add(string route, byte group, byte location) {
-            var collection = new MenuItemCollection(route);
+        public MenuItemCollection Add(string route, byte group, byte location, Keys shortcutKeys) {
+            var collection = new MenuItemCollection(route) { ShortcutKeys = shortcutKeys };
 
             if(Groups.Exists(group) is BinaryHeap<MenuItemCollection> collections) {
                 collections.Insert(location, collection);
