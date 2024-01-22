@@ -2,8 +2,8 @@
 
     public interface IExtensionData {
 
-        IEnumerable<Type> GetLocalMenuItems();
+        IEnumerable<Type> GetLocalItems();
 
-        IEnumerable<PluginItem> GetPluginMenuItems();
+        IEnumerable<PluginItem> GetPluginItems();
     }
 }

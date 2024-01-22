@@ -4,8 +4,8 @@
         private readonly IExtensionData extensionData;
 
         private ToolStripItem[] menuItems;
-        private MenuItemCollection collection;
-        private string defaultRoute;
+        private MenuItemCollection menuCollection;
+        private string defaultMenuRoute;
 
         public ExtensionManager() {
             extensionData = Activator.CreateInstance<ExtensionData>();
@@ -13,48 +13,48 @@
 
         #region Public Methods
 
-        public void LoadLocalMenuItem() {
-            collection = new(null);
+        public void LoadLocaltems() {
+            menuCollection = new(null);
 
-            var menuItem = GetDataMenuItem(typeof(DefaultMenuItem));
-            defaultRoute = menuItem.Route;
-            InsertMenuItem(collection, menuItem);
+            var menuItem = GetMenuItemFull(typeof(DefaultMenuItem));
+            defaultMenuRoute = menuItem.Route;
+            InsertMenuItem(menuCollection, menuItem);
 
-            LoadMenuItem(extensionData.GetLocalMenuItems());
+            LoadItems(extensionData.GetLocalItems());
         }
 
         public IEnumerable<PluginItem> LoadPluginItems() {
-            return extensionData.GetPluginMenuItems();
+            return extensionData.GetPluginItems();
         }
 
-        public void LoadPluginMenuItem(PluginItem pluginItem) {
-            LoadMenuItem(pluginItem.Assembly.GetTypes());
+        public void LoadPluginItem(PluginItem pluginItem) {
+            LoadItems(pluginItem.Assembly.GetTypes());
         }
 
-        public ToolStripItem[] Render() {
-            var items = Render(collection);
-            if(ItemExists(items, defaultRoute) is ToolStripMenuItem toolStripMenu && toolStripMenu.DropDownItems.Count == 0) { items.Remove(toolStripMenu); }
+        public ToolStripItem[] MenuItemRender() {
+            var items = MenuItemRender(menuCollection);
+            if(MenuItemExists(items, defaultMenuRoute) is ToolStripMenuItem toolStripMenu && toolStripMenu.DropDownItems.Count == 0) { items.Remove(toolStripMenu); }
             menuItems = [.. items];
 
-            defaultRoute = null;
-            collection = null;
+            defaultMenuRoute = null;
+            menuCollection = null;
 
             return menuItems;
-        }
-
-        public void TextsUpdate() {
-            TextsUpdate(menuItems);
         }
 
         public ToolStripMenuItem GetMenuItem(string route) {
             return GetMenuItem(menuItems, route);
         }
 
+        public void TextsUpdate() {
+            TextsUpdate(menuItems);
+        }
+
         #endregion Public Methods
 
         #region Private Methods
 
-        private MenuItemFull GetDataMenuItem(Type type) {
+        private MenuItemFull GetMenuItemFull(Type type) {
             byte group = 0, location = 0;
             string route = null;
             var menuItem = (MenuItem)Activator.CreateInstance(type);
@@ -74,15 +74,15 @@
                     keys = ((ShortcutKeys)shortcutKeys[0]).Value;
                 }
             }
-            route ??= $"{defaultRoute}/{type.FullName.ToLower()}";
+            route ??= $"{defaultMenuRoute}/{type.FullName.ToLower()}";
 
             return new MenuItemFull(route, group, location, keys, menuItem);
         }
 
-        private void LoadMenuItem(IEnumerable<Type> types) {
+        private void LoadItems(IEnumerable<Type> types) {
             foreach(var type in types) {
                 if(type.IsClass && !type.IsAbstract && type.IsSealed && type.IsSubclassOf(typeof(MenuItem))) {
-                    InsertMenuItem(collection, GetDataMenuItem(type));
+                    InsertMenuItem(menuCollection, GetMenuItemFull(type));
                 }
             }
         }
@@ -91,7 +91,7 @@
 
         #region Static Private Methods
 
-        private static List<ToolStripItem> Render(MenuItemCollection items) {
+        private static List<ToolStripItem> MenuItemRender(MenuItemCollection items) {
             var toolStripItem = new List<ToolStripItem>();
 
             while(items.Groups.Next() is BinaryHeap<MenuItemCollection> group) {
@@ -114,7 +114,7 @@
                         menuItem.Tag = new Tuple<string, MenuItem>(item.Route, null);
                     }
 
-                    menuItem.DropDownItems.AddRange(Render(item).ToArray());
+                    menuItem.DropDownItems.AddRange(MenuItemRender(item).ToArray());
                     toolStripItem.Add(menuItem);
                 }
                 if(items.Groups.GetList().Count != 0) {
@@ -139,21 +139,10 @@
             }
         }
 
-        private static void TextsUpdate(IEnumerable items) {
-            foreach(var item in items) {
-                if(item is ToolStripMenuItem toolStripMenuItem) {
-                    if(toolStripMenuItem.Tag is Tuple<string, MenuItem> menuItem && menuItem.Item2 is not null && menuItem.Item2.GetType().GetProperty("Text") is PropertyInfo property && !property.DeclaringType.Equals(typeof(MenuItem))) {
-                        toolStripMenuItem.Text = menuItem.Item2.Text;
-                    }
-                    TextsUpdate(toolStripMenuItem.DropDownItems);
-                }
-            }
-        }
-
         private static ToolStripMenuItem GetMenuItem(IEnumerable items, string route) {
             if(!string.IsNullOrEmpty(route)) {
                 var routes = route.Split("/");
-                if(ItemExists(items, routes[0]) is ToolStripMenuItem toolStripMenuItem) {
+                if(MenuItemExists(items, routes[0]) is ToolStripMenuItem toolStripMenuItem) {
                     if(routes.Length == 1) {
                         return toolStripMenuItem;
                     } else {
@@ -165,13 +154,24 @@
             return null;
         }
 
-        private static ToolStripMenuItem ItemExists(IEnumerable items, string code) {
+        private static ToolStripMenuItem MenuItemExists(IEnumerable items, string code) {
             foreach(var item in items) {
                 if(item is ToolStripMenuItem toolStripMenuItem && toolStripMenuItem.Tag is Tuple<string, MenuItem> menuItem && menuItem.Item1.Equals(code)) {
                     return toolStripMenuItem;
                 }
             }
             return null;
+        }
+
+        private static void TextsUpdate(IEnumerable items) {
+            foreach(var item in items) {
+                if(item is ToolStripMenuItem toolStripMenuItem) {
+                    if(toolStripMenuItem.Tag is Tuple<string, MenuItem> menuItem && menuItem.Item2 is not null && menuItem.Item2.GetType().GetProperty("Text") is PropertyInfo property && !property.DeclaringType.Equals(typeof(MenuItem))) {
+                        toolStripMenuItem.Text = menuItem.Item2.Text;
+                    }
+                    TextsUpdate(toolStripMenuItem.DropDownItems);
+                }
+            }
         }
 
         #endregion Static Private Methods

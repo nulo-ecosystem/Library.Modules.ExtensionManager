@@ -40,7 +40,7 @@ namespace Nulo {
             splash.SetStatusLabel(MultiLanguageManager.GetText("Pages_SplashScreen_PluginManager_LoadLocalMenuItem"));
             // Settings
             ExtensionManager = new ExtensionManager<ExtensionData, Miscellaneous>();
-            ExtensionManager.LoadLocalMenuItem();
+            ExtensionManager.LoadLocaltems();
             // Await
             Thread.Sleep(2000);
 
@@ -48,7 +48,7 @@ namespace Nulo {
                 // Notify
                 splash.SetStatusLabel($"{MultiLanguageManager.GetText("Pages_SplashScreen_PluginManager_LoadPluginMenuItem")}: {pluginItem.ProductName}");
                 // Settings
-                ExtensionManager.LoadPluginMenuItem(pluginItem);
+                ExtensionManager.LoadPluginItem(pluginItem);
                 // Await
                 Thread.Sleep(2000);
             }
@@ -67,7 +67,7 @@ namespace Nulo {
             #endregion Workspace Manager
 
             splash.SetStatusLabel(string.Empty);
-            var mainPage = new MainPage(ExtensionManager.Render());
+            var mainPage = new MainPage(ExtensionManager.MenuItemRender());
             Thread.Sleep(2000);
             splash.Dispose();
 

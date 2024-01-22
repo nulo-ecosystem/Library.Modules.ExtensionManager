@@ -2,11 +2,11 @@
 
     internal class ExtensionData : IExtensionData {
 
-        public IEnumerable<Type> GetLocalMenuItems() {
+        public IEnumerable<Type> GetLocalItems() {
             return Assembly.GetAssembly(typeof(ExtensionData)).GetTypes();
         }
 
-        public IEnumerable<PluginItem> GetPluginMenuItems() {
+        public IEnumerable<PluginItem> GetPluginItems() {
             var folder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\plugins";
             if(!Directory.Exists(folder)) {
                 Directory.CreateDirectory(folder);
